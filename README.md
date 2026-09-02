@@ -1,6 +1,15 @@
-# Gophish for the AwareCheck VPS
+# Gophish on `itsupport.insec.in`
 
-Production wrapper around official **[Gophish](https://github.com/gophish/gophish) v0.12.1**. It is meant to run on the same Ubuntu VPS as AwareCheck without taking ports **80/443** (nginx) or **8000 / 8001 / 9000**.
+Production wrapper around official **[Gophish](https://github.com/gophish/gophish) v0.12.1**. It runs on the same Ubuntu VPS as AwareCheck without taking ports **80/443** (nginx) or **8000 / 8001 / 9000**.
+
+Public names are on **insec.in**, not AwareCheck:
+
+| Role | Hostname |
+|------|----------|
+| Staff click this (campaign URL) | `https://itsupport.insec.in` |
+| You log in here (Gophish admin) | `https://admin.itsupport.insec.in` |
+
+Admin and landing pages cannot share the same host path: both apps serve `/`. Employees must hit the landing server; you must hit the admin server.
 
 Use this only for **authorized security-awareness simulations**.
 
@@ -11,7 +20,7 @@ Use this only for **authorized security-awareness simulations**.
 | Admin TLS on `127.0.0.1:3333` (self-signed) | Admin HTTP on `127.0.0.1:3333`, TLS at nginx |
 | Phish server on public `:80` | Phish HTTP on `127.0.0.1:8082` |
 | No systemd / nginx | `gophish` user, systemd unit, nginx site |
-| Admin CSRF origin empty | `trusted_origins` = `gophish.awarechck.com` |
+| Admin CSRF origin empty | `trusted_origins` = `admin.itsupport.insec.in` |
 
 Runtime files (binary, SQLite DB) live in `/opt/gophish/runtime` so git pulls never overwrite campaigns.
 
@@ -22,19 +31,19 @@ Runtime files (binary, SQLite DB) live in `/opt/gophish/runtime` so git pulls ne
 | AwareCheck | `awarechck.com` | `/opt/awarecheck` | `8000` |
 | Data Prahari | `dpdpsec.com` | `/opt/dpdpsec` | `8001` |
 | Insec-Hydra | `hydra.insec.in` | `/opt/insec-hydra` | `9000` |
-| **Gophish admin** | `gophish.awarechck.com` | `/opt/gophish/runtime` | `3333` |
-| **Gophish campaigns** | `phish.awarechck.com` | same | `8082` |
+| **Gophish admin** | `admin.itsupport.insec.in` | `/opt/gophish/runtime` | `3333` |
+| **Gophish campaigns** | `itsupport.insec.in` | same | `8082` |
 
 ## 1. DNS (do this first)
 
-In the `awarechck.com` DNS panel add:
+In the **insec.in** DNS panel add:
 
 | Type | Name | Value |
 |------|------|--------|
-| A | `gophish` | `77.107.95.65` |
-| A | `phish` | `77.107.95.65` |
+| A | `itsupport` | `77.107.95.65` |
+| A | `admin.itsupport` | `77.107.95.65` |
 
-Wait until `dig +short gophish.awarechck.com` returns `77.107.95.65`.
+Wait until `dig +short itsupport.insec.in` returns `77.107.95.65`.
 
 ## 2. Install on the VPS
 
@@ -46,7 +55,12 @@ git clone https://github.com/fir3storm/gophish.git /opt/gophish
 bash /opt/gophish/scripts/install.sh
 ```
 
-That downloads the official Linux binary (SHA-256 checked), creates user `gophish`, starts `gophish.service`, and enables nginx site `gophish`.
+If `/opt/gophish` already exists:
+
+```bash
+cd /opt/gophish && git pull origin main && bash scripts/install.sh
+systemctl restart gophish
+```
 
 Get the first-run password:
 
@@ -59,13 +73,13 @@ Username is always `admin`. Change it on first login.
 ## 3. HTTPS
 
 ```bash
-certbot --nginx -d gophish.awarechck.com -d phish.awarechck.com
-sudo nginx -t && sudo systemctl reload nginx
+certbot --nginx -d itsupport.insec.in -d admin.itsupport.insec.in
+nginx -t && systemctl reload nginx
 ```
 
-Open **https://gophish.awarechck.com**
+Open **https://admin.itsupport.insec.in**
 
-When you create a campaign, set the **URL** to `https://phish.awarechck.com` (not the admin host).
+When you create a campaign, set the **URL** to `https://itsupport.insec.in` (not the admin host). Email templates should use `{{.URL}}`.
 
 ## Useful commands
 
@@ -74,8 +88,6 @@ systemctl status gophish
 journalctl -u gophish -f
 systemctl restart gophish
 ```
-
-Re-run `bash /opt/gophish/scripts/install.sh` to replace the binary. Existing `config.json` and `gophish.db` are kept.
 
 ## Campaign sending (SMTP)
 

@@ -1,14 +1,16 @@
-# Gophish next to AwareCheck on the same VPS.
+# Gophish on the same VPS as AwareCheck.
 # nginx already owns :80 / :443. Gophish listens on localhost only.
 #
-# DNS (GoDaddy / wherever awarechck.com is hosted):
-#   A    gophish    77.107.95.65
-#   A    phish      77.107.95.65
+# DNS (insec.in zone):
+#   A    itsupport          77.107.95.65
+#   A    admin.itsupport    77.107.95.65
 #
 # After HTTP is working:
-#   certbot --nginx -d gophish.awarechck.com -d phish.awarechck.com
+#   certbot --nginx -d itsupport.insec.in -d admin.itsupport.insec.in
+#
+# Admin UI (you log in here)     →  https://admin.itsupport.insec.in
+# Campaign links (staff click)   →  https://itsupport.insec.in
 
-# Admin UI  →  https://gophish.awarechck.com
 server {
     listen 80;
     server_name __ADMIN_HOST__;
@@ -26,7 +28,6 @@ server {
     }
 }
 
-# Campaign landing / tracking  →  https://phish.awarechck.com
 server {
     listen 80;
     server_name __PHISH_HOST__;

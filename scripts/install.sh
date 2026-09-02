@@ -7,8 +7,8 @@ GOPHISH_VERSION="0.12.1"
 GOPHISH_SHA256="44f598c1eeb72c3b08fa73d57049022d96cea2872283b87a73d21af78a2c6d47"
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 RUNTIME_DIR="${RUNTIME_DIR:-/opt/gophish/runtime}"
-ADMIN_HOST="${GOPHISH_ADMIN_HOST:-gophish.awarechck.com}"
-PHISH_HOST="${GOPHISH_PHISH_HOST:-phish.awarechck.com}"
+ADMIN_HOST="${GOPHISH_ADMIN_HOST:-admin.itsupport.insec.in}"
+PHISH_HOST="${GOPHISH_PHISH_HOST:-itsupport.insec.in}"
 ADMIN_PORT="${GOPHISH_ADMIN_PORT:-3333}"
 PHISH_PORT="${GOPHISH_PHISH_PORT:-8082}"
 
@@ -56,30 +56,24 @@ chmod +x "$RUNTIME_DIR/gophish"
 if [[ -f "$TMP/gophish.db.bak" ]]; then
   cp -a "$TMP/gophish.db.bak" "$RUNTIME_DIR/gophish.db"
 fi
-if [[ -f "$TMP/config.json.bak" ]]; then
-  cp -a "$TMP/config.json.bak" "$RUNTIME_DIR/config.json"
-else
-  sed -e "s/__ADMIN_PORT__/${ADMIN_PORT}/g" \
-      -e "s/__PHISH_PORT__/${PHISH_PORT}/g" \
-      -e "s/__ADMIN_HOST__/${ADMIN_HOST}/g" \
-      "$REPO_ROOT/deploy/config.json.example" > "$RUNTIME_DIR/config.json"
-fi
+# Always refresh listen addresses / trusted origin so hostname changes apply.
+# SQLite DB is restored above and is not in this file.
+sed -e "s/__ADMIN_PORT__/${ADMIN_PORT}/g" \
+    -e "s/__PHISH_PORT__/${PHISH_PORT}/g" \
+    -e "s/__ADMIN_HOST__/${ADMIN_HOST}/g" \
+    "$REPO_ROOT/deploy/config.json.example" > "$RUNTIME_DIR/config.json"
 
 chown -R gophish:gophish "$RUNTIME_DIR"
 
 install -m 0644 "$REPO_ROOT/deploy/gophish.service" /etc/systemd/system/gophish.service
 
 NGINX_DEST="/etc/nginx/sites-available/gophish"
-if [[ ! -f "$NGINX_DEST" ]]; then
-  sed -e "s/__ADMIN_HOST__/${ADMIN_HOST}/g" \
-      -e "s/__PHISH_HOST__/${PHISH_HOST}/g" \
-      -e "s/__ADMIN_PORT__/${ADMIN_PORT}/g" \
-      -e "s/__PHISH_PORT__/${PHISH_PORT}/g" \
-      "$REPO_ROOT/deploy/nginx-gophish.conf.example" > "$NGINX_DEST"
-  ln -sfn "$NGINX_DEST" /etc/nginx/sites-enabled/gophish
-else
-  echo "Leaving existing $NGINX_DEST in place."
-fi
+sed -e "s/__ADMIN_HOST__/${ADMIN_HOST}/g" \
+    -e "s/__PHISH_HOST__/${PHISH_HOST}/g" \
+    -e "s/__ADMIN_PORT__/${ADMIN_PORT}/g" \
+    -e "s/__PHISH_PORT__/${PHISH_PORT}/g" \
+    "$REPO_ROOT/deploy/nginx-gophish.conf.example" > "$NGINX_DEST"
+ln -sfn "$NGINX_DEST" /etc/nginx/sites-enabled/gophish
 
 systemctl daemon-reload
 systemctl enable --now gophish
