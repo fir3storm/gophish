@@ -89,6 +89,21 @@ journalctl -u gophish -f
 systemctl restart gophish
 ```
 
+## 4. Import email + landing templates
+
+The repo includes original INSEC templates plus HailBytes, LinkSec, and piyush27pawar packs under `templates/`.
+
+```bash
+cd /opt/gophish && git pull origin main
+apt-get install -y sqlite3 python3
+export GOPHISH_API_KEY=$(sqlite3 /opt/gophish/runtime/gophish.db "SELECT api_key FROM users LIMIT 1;")
+python3 /opt/gophish/scripts/import-templates.py
+```
+
+Then in Gophish: pick an **Email Template** and a **Landing Page**, campaign URL `https://itsupport.insec.in`. Pair INSEC emails with **INSEC - IT Support login** or **INSEC - Education / you were phished**.
+
+See `templates/README.md`.
+
 ## Campaign sending (SMTP)
 
 Gophish needs an SMTP account (your mail server, SES, etc.). Configure it in the Gophish UI under **Sending Profiles**. This package does not send mail by itself.
