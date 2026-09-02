@@ -3,7 +3,7 @@
 
 Usage on the VPS (as root):
 
-  export GOPHISH_API_KEY=$(sqlite3 /opt/gophish/runtime/gophish.db "SELECT api_key FROM users LIMIT 1;")
+  export GOPHISH_API_KEY=$(sqlite3 /opt/gophish/runtime/gophish.db "SELECT api_key FROM users WHERE username='admin';")
   python3 /opt/gophish/scripts/import-templates.py
 """
 from __future__ import annotations
@@ -255,11 +255,15 @@ def import_piyush(imp: Importer) -> None:
 def main() -> None:
     if not API_KEY:
         die(
-            "Set GOPHISH_API_KEY.\n"
-            "  sqlite3 /opt/gophish/runtime/gophish.db \"SELECT api_key FROM users LIMIT 1;\""
+            "Set GOPHISH_API_KEY for the same user you log into in the UI (usually admin).\n"
+            "  sqlite3 /opt/gophish/runtime/gophish.db \"SELECT username, api_key FROM users;\"\n"
+            "Or copy the key from Gophish → Account Settings."
         )
     print(f"API {API}")
     imp = Importer()
+    print(
+        f"this API user already has emails={len(imp.email_names)} pages={len(imp.page_names)}"
+    )
     import_insec(imp)
     import_hailbytes(imp)
     import_linksec(imp)

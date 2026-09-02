@@ -18,7 +18,7 @@ Keep each vendor `LICENSE` / `README` with those files.
 ```bash
 cd /opt/gophish && git pull origin main
 apt-get install -y sqlite3 python3
-export GOPHISH_API_KEY=$(sqlite3 /opt/gophish/runtime/gophish.db "SELECT api_key FROM users LIMIT 1;")
+export GOPHISH_API_KEY=$(sqlite3 /opt/gophish/runtime/gophish.db "SELECT api_key FROM users WHERE username='admin';")
 python3 /opt/gophish/scripts/import-templates.py
 ```
 

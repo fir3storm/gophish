@@ -96,7 +96,7 @@ The repo includes original INSEC templates plus HailBytes, LinkSec, and piyush27
 ```bash
 cd /opt/gophish && git pull origin main
 apt-get install -y sqlite3 python3
-export GOPHISH_API_KEY=$(sqlite3 /opt/gophish/runtime/gophish.db "SELECT api_key FROM users LIMIT 1;")
+export GOPHISH_API_KEY=$(sqlite3 /opt/gophish/runtime/gophish.db "SELECT api_key FROM users WHERE username='admin';")
 python3 /opt/gophish/scripts/import-templates.py
 ```
 
