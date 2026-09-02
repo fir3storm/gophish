@@ -74,6 +74,33 @@ def title_from_html(html: str, fallback: str) -> str:
     return fallback.replace("-", " ").replace("_", " ")[:120]
 
 
+GOPHISH_FIELDS = {
+    "From",
+    "URL",
+    "Tracker",
+    "TrackingURL",
+    "RId",
+    "BaseURL",
+    "Email",
+    "FirstName",
+    "LastName",
+    "Position",
+}
+
+
+def sanitize_gophish_html(html: str) -> str:
+    """Drop HailBytes/etc variables Gophish 0.12 cannot execute (e.g. {{.CampaignType}})."""
+
+    def repl(match: re.Match[str]) -> str:
+        inner = match.group(1)
+        names = re.findall(r"\.(\w+)", inner)
+        if names and any(n not in GOPHISH_FIELDS for n in names):
+            return ""
+        return match.group(0)
+
+    return re.sub(r"\{\{(.*?)\}\}", repl, html, flags=re.S)
+
+
 def ensure_tracker(html: str) -> str:
     if "{{.Tracker}}" in html:
         return html
@@ -96,6 +123,7 @@ class Importer:
         self.created_email = 0
         self.created_page = 0
         self.skipped = 0
+        self.failed = 0
 
     def add_email(self, name: str, subject: str, html: str) -> None:
         name = name[:190]
@@ -103,12 +131,17 @@ class Importer:
             print(f"skip email  {name}")
             self.skipped += 1
             return
-        html = ensure_tracker(html)
-        api(
-            "POST",
-            "/api/templates/",
-            {"name": name, "subject": subject[:200], "text": "", "html": html},
-        )
+        html = ensure_tracker(sanitize_gophish_html(html))
+        try:
+            api(
+                "POST",
+                "/api/templates/",
+                {"name": name, "subject": subject[:200], "text": "", "html": html},
+            )
+        except RuntimeError as exc:
+            self.failed += 1
+            print(f"FAIL email  {name}: {exc}")
+            return
         self.email_names.add(name)
         self.created_email += 1
         print(f"email       {name}")
@@ -119,17 +152,26 @@ class Importer:
             print(f"skip page   {name}")
             self.skipped += 1
             return
-        api(
-            "POST",
-            "/api/pages/",
-            {
-                "name": name,
-                "html": html,
-                "capture_credentials": capture,
-                "capture_passwords": passwords,
-                "redirect_url": redirect or "",
-            },
-        )
+        html = sanitize_gophish_html(html)
+        try:
+            api(
+                "POST",
+                "/api/pages/",
+                {
+                    "name": name,
+                    "html": html,
+                    "capture_credentials": capture,
+                    "capture_passwords": passwords,
+                    "redirect_url": redirect or "",
+                },
+            )
+        except RuntimeError as exc:
+            self.failed += 1
+            print(f"FAIL page   {name}: {exc}")
+            return
+        self.page_names.add(name)
+        self.created_page += 1
+        print(f"page        {name}")
         self.page_names.add(name)
         self.created_page += 1
         print(f"page        {name}")
@@ -278,7 +320,8 @@ def main() -> None:
     import_linksec(imp)
     import_piyush(imp)
     print(
-        f"\nDone. created emails={imp.created_email} pages={imp.created_page} skipped={imp.skipped}"
+        f"\nDone. created emails={imp.created_email} pages={imp.created_page} "
+        f"skipped={imp.skipped} failed={imp.failed}"
     )
 
 
