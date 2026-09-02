@@ -24,6 +24,14 @@ python3 /opt/gophish/scripts/import-templates.py
 
 Templates appear in Gophish under **Email Templates** and **Landing Pages**. Re-running skips names that already exist.
 
+English only: HailBytes Spanish/Portuguese packs are not imported. To drop them from the repo and from Gophish if they were already imported:
+
+```bash
+cd /opt/gophish && git pull origin main
+export GOPHISH_API_KEY=$(sqlite3 /opt/gophish/runtime/gophish.db "SELECT api_key FROM users WHERE username='admin';")
+python3 /opt/gophish/scripts/keep-english-templates.py --gophish
+```
+
 Optional education redirect (default is StaySafeOnline):
 
 ```bash

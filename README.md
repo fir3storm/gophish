@@ -102,6 +102,14 @@ python3 /opt/gophish/scripts/import-templates.py
 
 Then in Gophish: pick an **Email Template** and a **Landing Page**, campaign URL `https://itsupport.insec.in`. Pair INSEC emails with **INSEC - IT Support login** or **INSEC - Education / you were phished**.
 
+Import is English-only. If Spanish/Portuguese HailBytes items are already in Gophish:
+
+```bash
+cd /opt/gophish && git pull origin main
+export GOPHISH_API_KEY=$(sqlite3 /opt/gophish/runtime/gophish.db "SELECT api_key FROM users WHERE username='admin';")
+python3 /opt/gophish/scripts/keep-english-templates.py --gophish
+```
+
 See `templates/README.md`.
 
 After a click or form submit, send people to **https://itsupport.insec.in/got-phished**.

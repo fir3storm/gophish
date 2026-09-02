@@ -246,6 +246,16 @@ def import_hailbytes(imp: Importer) -> None:
                 REDIRECT if capture else "",
             )
     for category in sorted(p for p in root.iterdir() if p.is_dir() and p.name not in SKIP_DIRS):
+        meta_path = category / "metadata.json"
+        if meta_path.exists():
+            try:
+                lang = json.loads(meta_path.read_text(encoding="utf-8")).get("language") or "en"
+            except json.JSONDecodeError:
+                lang = "en"
+            lang = str(lang).strip().lower()
+            if lang and lang != "en" and not lang.startswith("en-"):
+                print(f"skip pack   HailBytes {category.name} ({lang})")
+                continue
         mapping = hailbytes_subjects(category)
         for html_path in sorted(category.glob("*.html")):
             html = html_path.read_text(encoding="utf-8", errors="replace")
