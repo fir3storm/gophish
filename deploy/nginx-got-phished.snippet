@@ -1,5 +1,6 @@
-# Paste this inside the itsupport.insec.in server blocks (port 80 and 443),
-# *before* the catch-all `location /` proxy.
+# Kept as a copy of the location block. On a live VPS (certbot already ran),
+# do not paste this by hand and do not re-run install.sh.
+# Use: bash /opt/gophish/scripts/enable-got-phished.sh
 
     location = /got-phished {
         default_type text/html;

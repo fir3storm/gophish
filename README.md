@@ -104,6 +104,17 @@ Then in Gophish: pick an **Email Template** and a **Landing Page**, campaign URL
 
 See `templates/README.md`.
 
+After a click or form submit, send people to **https://itsupport.insec.in/got-phished**.
+
+Do **not** re-run `install.sh` for this — it would overwrite the live nginx file and drop certbot TLS. Patch the existing HTTP and HTTPS `itsupport.insec.in` servers:
+
+```bash
+cd /opt/gophish && git pull origin main
+bash /opt/gophish/scripts/enable-got-phished.sh
+```
+
+Hard-refresh the URL after that. Set each landing page **Redirect to** `https://itsupport.insec.in/got-phished`.
+
 ## Campaign sending (SMTP)
 
 Gophish needs an SMTP account (your mail server, SES, etc.). Configure it in the Gophish UI under **Sending Profiles**. This package does not send mail by itself.
