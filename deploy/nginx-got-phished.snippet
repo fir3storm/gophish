@@ -1,0 +1,7 @@
+# Paste this inside the itsupport.insec.in server blocks (port 80 and 443),
+# *before* the catch-all `location /` proxy.
+
+    location = /got-phished {
+        default_type text/html;
+        alias /opt/gophish/templates/insec/static/got-phished.html;
+    }

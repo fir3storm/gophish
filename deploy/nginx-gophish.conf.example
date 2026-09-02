@@ -32,7 +32,14 @@ server {
     listen 80;
     server_name __PHISH_HOST__;
 
+    # Education page after a click/submit. Campaign tracking stays on /.
+    location = /got-phished {
+        default_type text/html;
+        alias /opt/gophish/templates/insec/static/got-phished.html;
+    }
+
     location / {
+        proxy_pass http://127.0.0.1:__PHISH_PORT__;
         proxy_pass http://127.0.0.1:__PHISH_PORT__;
         proxy_http_version 1.1;
         proxy_set_header Host $host;

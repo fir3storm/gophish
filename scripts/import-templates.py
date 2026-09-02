@@ -21,7 +21,7 @@ TEMPLATES = ROOT / "templates"
 API = os.environ.get("GOPHISH_URL", "http://127.0.0.1:3333").rstrip("/")
 API_KEY = os.environ.get("GOPHISH_API_KEY", "").strip()
 REDIRECT = os.environ.get(
-    "GOPHISH_REDIRECT_URL", "https://staysafeonline.org/phishing/"
+    "GOPHISH_REDIRECT_URL", "https://itsupport.insec.in/got-phished"
 )
 
 
