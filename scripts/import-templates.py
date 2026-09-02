@@ -41,13 +41,22 @@ def api(method: str, path: str, payload: dict | None = None):
             "Content-Type": "application/json",
         },
     )
+    # Gophish uses StrictSlash; do not follow redirects (urllib would turn POST into GET).
+    opener = urllib.request.build_opener(urllib.request.HTTPHandler)
     try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
+        with opener.open(req, timeout=60) as resp:
+            status = getattr(resp, "status", 200)
             raw = resp.read().decode("utf-8")
-            return json.loads(raw) if raw else None
+            body = json.loads(raw) if raw else None
     except urllib.error.HTTPError as exc:
         body = exc.read().decode("utf-8", errors="replace")
         raise RuntimeError(f"{method} {path} -> HTTP {exc.code}: {body}") from exc
+    if method == "POST":
+        if not isinstance(body, dict) or not body.get("id"):
+            raise RuntimeError(f"{method} {path} did not create a record: {body!r}")
+        if status not in (200, 201):
+            raise RuntimeError(f"{method} {path} -> HTTP {status}: {body!r}")
+    return body
 
 
 def load_json(path: Path) -> dict:
@@ -80,8 +89,8 @@ def looks_like_login(html: str) -> bool:
 
 class Importer:
     def __init__(self) -> None:
-        templates = api("GET", "/api/templates") or []
-        pages = api("GET", "/api/pages") or []
+        templates = api("GET", "/api/templates/") or []
+        pages = api("GET", "/api/pages/") or []
         self.email_names = {t.get("name") for t in templates}
         self.page_names = {p.get("name") for p in pages}
         self.created_email = 0
@@ -97,7 +106,7 @@ class Importer:
         html = ensure_tracker(html)
         api(
             "POST",
-            "/api/templates",
+            "/api/templates/",
             {"name": name, "subject": subject[:200], "text": "", "html": html},
         )
         self.email_names.add(name)
@@ -112,7 +121,7 @@ class Importer:
             return
         api(
             "POST",
-            "/api/pages",
+            "/api/pages/",
             {
                 "name": name,
                 "html": html,
