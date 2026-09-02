@@ -172,9 +172,6 @@ class Importer:
         self.page_names.add(name)
         self.created_page += 1
         print(f"page        {name}")
-        self.page_names.add(name)
-        self.created_page += 1
-        print(f"page        {name}")
 
 
 def import_insec(imp: Importer) -> None:
